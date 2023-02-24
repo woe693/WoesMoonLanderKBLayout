@@ -18,7 +18,12 @@
 
 #pragma once
 
+#define AUTO_SHIFT_TIMEOUT 200
+#define NO_AUTO_SHIFT_SPECIAL
+
 #define MATRIX_ROWS 12
 #define MATRIX_COLS 7
 
 #define ORYX_CONFIGURATOR
+
+

@@ -24,6 +24,20 @@
 #include "raw_hid.h"
 #include "process_combo.h"
 
+#define numbrrow        KC_ESC, KC_1,   KC_2,   KC_3,   KC_4,   KC_5,
+#define qwert           KC_Q,   KC_W,   KC_E,   KC_R,   KC_T,
+#define shasdfg         KC_A,   KC_S,   KC_D,   KC_F,   KC_G,
+
+#define WindowsNav()\
+{\
+register_code(KC_LEFT_CTRL); \
+register_code(KC_LALT); \
+register_code(KC_TAB); \
+unregister_code(KC_LEFT_CTRL); \
+unregister_code(KC_LALT); \
+unregister_code(KC_TAB); \
+}\
+
 //#define QMK_KEYBOARD "Moonlander"
 //#define QMK_KEYMAP   "Test"
 //#define COMBO_COUNT 1
@@ -31,8 +45,6 @@
 
 enum layers {
     BASE,  // default layer
-    FUNC,  // Function Keys
-    MDIA,  // media keys
     NAV,
     GAME,
 };
@@ -48,6 +60,8 @@ enum custom_keycodes {
     WDNAVSELECT,
     ARRW,
     CUT,
+    UNDO,
+    GAMELAYSWITCH,
 };
 
 typedef enum
@@ -58,68 +72,61 @@ typedef enum
 
 Window_Nav_states_e Window_Nav_State;
 
+void blankAKey(int key)
+{
+    rgb_matrix_set_color(key, 0, 0 ,0);
+}
+
+void blankAColumn(int Column)
+{
+    for(uint8_t i = 1; i < 6; i++)
+    {
+        blankAKey(i + (Column * 5));
+    }
+}
 
 
 // clang-format off
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     [BASE] = LAYOUT_moonlander(
-        KC_EQL,     KC_1,            KC_2,           KC_3,        KC_4,     KC_5,    XXXXXXX,                    XXXXXXX,  KC_6,      KC_7,             KC_8,             KC_9,             KC_0,             KC_MINS,
-        KC_DEL,     KC_Q,            KC_W,           KC_E,        KC_R,     KC_T,    XXXXXXX,                    XXXXXXX,  KC_Y,      KC_U,             KC_I,             KC_O,             KC_P,             KC_BSLS,
-        KC_BSPC,    KC_A,            KC_S,           KC_D,        KC_F,     KC_G,    XXXXXXX,                    XXXXXXX,  KC_H,      KC_J,             KC_K,             KC_L,             KC_SCLN,          KC_QUOT,
-        KC_LSFT,    LCTL_T(KC_Z),    KC_X,           KC_C,        KC_V,     KC_B,                                          KC_N,      KC_M,             KC_COMM,          KC_DOT,           KC_SLSH,          KC_RSFT,
-        XXXXXXX,    XXXXXXX,         XXXXXXX,        XXXXXXX,     WDNAV,    XXXXXXX,                             KC_ESC,   ARRW,      XXXXXXX,          KC_LBRC,          KC_RBRC,          MO(FUNC),
+        KC_EQL,     KC_1,            KC_2,           KC_3,        KC_4,     KC_5,    XXXXXXX,                    XXXXXXX,  KC_6,   KC_7,   KC_8,      KC_9,     KC_0,     KC_MINS,
+        KC_DEL,     KC_Q,            KC_W,           KC_E,        KC_R,     KC_T,    XXXXXXX,                    XXXXXXX,  KC_Y,   KC_U,   KC_I,      KC_O,     KC_P,     KC_BSLS,
+        KC_BSPC,    KC_A,            KC_S,           KC_D,        KC_F,     KC_G,    XXXXXXX,                    XXXXXXX,  KC_H,   KC_J,   KC_K,      KC_L,     KC_SCLN,  KC_QUOT,
+        KC_LSFT,    LCTL_T(KC_Z),    KC_X,           KC_C,        KC_V,     KC_B,                                          KC_N,   KC_M,   KC_COMM,   KC_DOT,   KC_SLSH,  KC_RSFT,
+        XXXXXXX,    XXXXXXX,         XXXXXXX,        XXXXXXX,     WDNAV,             UNDO,                       KC_ESC,           ARRW,   XXXXXXX,   KC_LBRC,  KC_RBRC,  GAMELAYSWITCH,
 
                                                                   KC_SPC,   KC_BSPC, KC_LGUI,                    KC_LALT,  KC_TAB,  KC_ENT
     ),
 
-    [FUNC] = LAYOUT_moonlander(
-        _______, KC_F1,   KC_F2,   KC_F3,   KC_F4,   KC_F5,   KC_F6,             KC_F7,   KC_F8,   KC_F9,   KC_F10,  KC_F11,  KC_F12,  _______,
-        _______, _______, _______, _______, _______, _______, _______,           _______, _______, _______, _______, _______, _______, _______,
-        _______, _______, _______, _______, _______, _______, _______,           _______, _______, _______, _______, _______, _______, _______,
-        _______, _______, _______, _______, _______, _______,                             _______, _______, _______, _______, _______, _______,
-        _______, _______, _______, _______, _______,          _______,           _______,          _______, _______, _______, _______, _______,
-                                            _______, _______, _______,           _______,_______, _______
-    ),
-
-    [MDIA] = LAYOUT_moonlander(
-        LED_LEVEL,XXXXXXX,XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX,           XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, QK_BOOT,
-        XXXXXXX, XXXXXXX, XXXXXXX, KC_MS_U, XXXXXXX, XXXXXXX, XXXXXXX,           XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX,
-        XXXXXXX, XXXXXXX, KC_MS_L, KC_MS_D, KC_MS_R, XXXXXXX, XXXXXXX,           XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, KC_MPLY,
-        _______, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX,                             XXXXXXX, XXXXXXX, KC_MPRV, KC_MNXT, XXXXXXX, XXXXXXX,
-        XXXXXXX, XXXXXXX, XXXXXXX, KC_BTN1, KC_BTN2,         XXXXXXX,            XXXXXXX,          KC_VOLU, KC_VOLD, KC_MUTE, XXXXXXX, XXXXXXX,
-                                            XXXXXXX, XXXXXXX, XXXXXXX,           XXXXXXX, XXXXXXX, XXXXXXX
-    ),
-
     [NAV] = LAYOUT_moonlander(
-        XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX,           XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX,
-        XXXXXXX, KC_TAB,  CUT,     COPY,    PASTE,   XXXXXXX, XXXXXXX,           XXXXXXX, XXXXXXX, XXXXXXX, KC_UP,   XXXXXXX, XXXXXXX, XXXXXXX,
-        XXXXXXX, KC_LSFT, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX,           XXXXXXX, XXXXXXX, KC_LEFT, KC_DOWN, KC_RGHT, BASELAY, XXXXXXX,
-        XXXXXXX, KC_LCTL, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX,                             XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX,
-        XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, WDNAVSELECT,         XXXXXXX,        _______, BASELAY, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX,
-                                            KC_LEFT_ALT, _______, XXXXXXX,           XXXXXXX, XXXXXXX, WDNAVSELECT
+        XXXXXXX,    KC_F1,           KC_F2,          KC_F3,       KC_F4,      KC_F5,   KC_F6,                     KC_F7,    KC_F8,   KC_F9,   KC_F10,  KC_F11,  KC_F12,  XXXXXXX,
+        XXXXXXX,    KC_TAB,          CUT,            COPY,        PASTE,      XXXXXXX, XXXXXXX,                   XXXXXXX,  XXXXXXX, XXXXXXX, KC_UP,   XXXXXXX, XXXXXXX, XXXXXXX,
+        XXXXXXX,    KC_LSFT,         XXXXXXX,        XXXXXXX,     XXXXXXX,    XXXXXXX, XXXXXXX,                   XXXXXXX,  XXXXXXX, KC_LEFT, KC_DOWN, KC_RGHT, BASELAY, XXXXXXX,
+        XXXXXXX,    KC_LCTL,         XXXXXXX,        KC_LEFT_ALT, XXXXXXX,    XXXXXXX,                                      XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX,
+        XXXXXXX,    XXXXXXX,         XXXXXXX,        XXXXXXX,     WDNAVSELECT,         XXXXXXX,                    _______,          BASELAY, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX,
+                                                                     _______, _______, _______,                    _______, _______, _______
     ),
 
     [GAME] = LAYOUT_moonlander(
-        XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX,                 XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX,
-        XXXXXXX, KC_TAB,  KC_Q,    KC_W,    KC_E,    KC_R,    KC_T,                    XXXXXXX, XXXXXXX, XXXXXXX, KC_UP,   XXXXXXX, XXXXXXX, XXXXXXX,
-        XXXXXXX, KC_LSFT, KC_A,    KC_S,    KC_D,    XXXXXXX, XXXXXXX,                 XXXXXXX, XXXXXXX, KC_LEFT, KC_DOWN, KC_RGHT, BASELAY, XXXXXXX,
-        XXXXXXX, KC_LCTL, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX,                                   XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX,
-        XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, WDNAVSELECT,      XXXXXXX,                 _______,          BASELAY, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX,
-                                            KC_LEFT_ALT, _______, XXXXXXX,           XXXXXXX, XXXXXXX, WDNAVSELECT
+
+        KC_ESC,   KC_1,    KC_2,    KC_3,    KC_4,    KC_5,   XXXXXXX,                XXXXXXX,   XXXXXXX,   XXXXXXX,   XXXXXXX,   XXXXXXX,   XXXXXXX,   XXXXXXX,
+        KC_TAB,   KC_Q,    KC_W,    KC_E,    KC_R,    KC_T,   XXXXXXX,                XXXXXXX,   XXXXXXX,   XXXXXXX,   XXXXXXX,   XXXXXXX,   XXXXXXX,   XXXXXXX,
+        XXXXXXX,  KC_A,    KC_S,    KC_D,    KC_F,    KC_G,   XXXXXXX,                XXXXXXX,   XXXXXXX,   XXXXXXX,   XXXXXXX,   XXXXXXX,   XXXXXXX,   XXXXXXX,
+        KC_LSFT,  KC_Z,    KC_X,    KC_C,    KC_V,    KC_B,                                   XXXXXXX,   XXXXXXX,   XXXXXXX,   XXXXXXX,   XXXXXXX,   XXXXXXX,
+        XXXXXXX,  XXXXXXX, XXXXXXX, KC_LCTL, KC_SPC,          XXXXXXX,                XXXXXXX,              _______,   XXXXXXX,   XXXXXXX,   XXXXXXX,   BASELAY,
+                                             XXXXXXX, XXXXXXX, _______
+                                             ,                XXXXXXX, XXXXXXX, WDNAVSELECT
     ),
 };
+
+
 
 bool process_record_user(uint16_t keycode, keyrecord_t *record) {
     if (record->event.pressed) {
         switch (keycode) {
 
         case WDNAV:
-            register_code(KC_LEFT_CTRL);
-            register_code(KC_LALT);
-            register_code(KC_TAB);
-            unregister_code(KC_LEFT_CTRL);
-            unregister_code(KC_LALT);
-            unregister_code(KC_TAB);
+            WindowsNav()
             layer_move(NAV);
             Window_Nav_State = NAVOPEN;
            return false;
@@ -185,11 +192,84 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
             unregister_code(KC_X);
             return false;
         break;
+
+        case UNDO:
+            register_code(KC_LCTL);
+            register_code(KC_Z);
+            unregister_code(KC_LCTL);
+            unregister_code(KC_Z);
+            return false;
+        break;
+
+        case GAMELAYSWITCH:
+            layer_move(GAME);
+            return false;
+        break;
         }
 
     }
     return true;
 }
 
+layer_state_t layer_state_set_user(layer_state_t state) {
+    switch (get_highest_layer(state)) {
+        case BASE:
+            autoshift_enable();
+            rgb_matrix_set_color(60, 0, 0 ,0);
 
+        break;
+        case NAV:
+
+            rgb_matrix_set_color(60, 255, 0 ,0);
+
+            rgb_matrix_set_color(53, 0, 0, 255);
+            rgb_matrix_set_color(52, 0, 0, 255);
+            rgb_matrix_set_color(48, 0, 0, 255);
+            rgb_matrix_set_color(58, 0, 0, 255);
+
+            //rgb_matrix_set_color(46, 0, 0, 0);
+            rgb_matrix_set_color(47, 0, 0, 0);
+            rgb_matrix_set_color(49, 0, 0, 0);
+            rgb_matrix_set_color(50, 0, 0, 0);
+
+            //rgb_matrix_set_color(51, 0, 0, 0);
+            rgb_matrix_set_color(54, 0, 0, 0);
+            rgb_matrix_set_color(55, 0, 0, 0);
+            //rgb_matrix_set_color(56, 0, 0, 0);
+            rgb_matrix_set_color(57, 0, 0, 0);
+            rgb_matrix_set_color(59, 0, 0, 0);
+
+            blankAColumn(8);
+            blankAColumn(7);
+            blankAColumn(12);
+            blankAColumn(13);
+            autoshift_disable();
+
+        break;
+        case GAME:
+
+            //blankAColumn(7);
+            blankAColumn(8);
+            blankAColumn(9);
+            blankAColumn(10);
+            blankAColumn(11);
+            blankAColumn(12);
+            blankAColumn(13);
+
+            blankAKey(36);
+            blankAKey(37);
+            blankAKey(38);
+            blankAKey(39);
+            rgb_matrix_set_color(40, 255, 255, 255);
+
+        break;
+        default:
+
+
+            autoshift_disable();
+
+        break;
+    }
+    return state;
+}
 

@@ -1,0 +1,4 @@
+{
+    "ewp": "${workspaceFolder}\\lib\\chibios\\demos\\STM32\\RT-STM32F303-DISCOVERY\\iar\\ch.ewp",
+    "configuration": "Debug"
+}
