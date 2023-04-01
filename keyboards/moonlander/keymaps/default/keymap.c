@@ -227,15 +227,15 @@ layer_state_t layer_state_set_user(layer_state_t state) {
             rgb_matrix_set_color(48, 0, 0, 255);
             rgb_matrix_set_color(58, 0, 0, 255);
 
-            //rgb_matrix_set_color(46, 0, 0, 0);
+            rgb_matrix_set_color(46, 0, 0, 0);
             rgb_matrix_set_color(47, 0, 0, 0);
             rgb_matrix_set_color(49, 0, 0, 0);
             rgb_matrix_set_color(50, 0, 0, 0);
 
-            //rgb_matrix_set_color(51, 0, 0, 0);
+            rgb_matrix_set_color(51, 0, 0, 0);
             rgb_matrix_set_color(54, 0, 0, 0);
             rgb_matrix_set_color(55, 0, 0, 0);
-            //rgb_matrix_set_color(56, 0, 0, 0);
+            rgb_matrix_set_color(56, 0, 0, 0);
             rgb_matrix_set_color(57, 0, 0, 0);
             rgb_matrix_set_color(59, 0, 0, 0);
 
