@@ -18,11 +18,22 @@
 
 #pragma once
 
-#define AUTO_SHIFT_TIMEOUT 200
+#define AUTO_SHIFT_TIMEOUT 150
+#define TAPPING_TERM 200
+#define LEADER_TIMEOUT 350
 
 #define MATRIX_ROWS 12
 #define MATRIX_COLS 7
 
+#define LEADER_PER_KEY_TIMING
 #define ORYX_CONFIGURATOR
+
+
+
+#define numbrrow        KC_ESC, KC_1,   KC_2,   KC_3,   KC_4,   KC_5,
+#define qwert           KC_Q,   KC_W,   KC_E,   KC_R,   KC_T,
+#define shasdfg         KC_A,   KC_S,   KC_D,   KC_F,   KC_G,
+
+
 
 

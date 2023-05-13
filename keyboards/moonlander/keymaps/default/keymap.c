@@ -23,35 +23,15 @@
 #include "moonlander.h"
 #include "raw_hid.h"
 #include "process_combo.h"
+#include "Hotkey.h"
+#include "rgb.h"
 
-#define numbrrow        KC_ESC, KC_1,   KC_2,   KC_3,   KC_4,   KC_5,
-#define qwert           KC_Q,   KC_W,   KC_E,   KC_R,   KC_T,
-#define shasdfg         KC_A,   KC_S,   KC_D,   KC_F,   KC_G,
+#define MONAV ACTION_LAYER_MODS(NAV, KC_LEFT_CTRL | KC_LALT | KC_TAB)
 
-#define WindowsNav()\
-{\
-register_code(KC_LEFT_CTRL); \
-register_code(KC_LALT); \
-register_code(KC_TAB); \
-unregister_code(KC_LEFT_CTRL); \
-unregister_code(KC_LALT); \
-unregister_code(KC_TAB); \
-}\
+LEADER_EXTERNS();
 
-//#define QMK_KEYBOARD "Moonlander"
-//#define QMK_KEYMAP   "Test"
-//#define COMBO_COUNT 1
-
-
-enum layers {
-    BASE,  // default layer
-    NAV,
-    GAME,
-};
-
-
-
-enum custom_keycodes {
+enum custom_keycodes
+{
     VRSN = ML_SAFE_RANGE,
     WDNAV,
     COPY,
@@ -64,27 +44,19 @@ enum custom_keycodes {
     GAMELAYSWITCH,
 };
 
-typedef enum
+enum layers
 {
+    BASE,  // default layer
+    NAV,
+    GAME,
+};
+
+typedef enum{
     NAVCLOSED,
     NAVOPEN,
-}Window_Nav_states_e;
+} Window_Nav_State_t;
 
-Window_Nav_states_e Window_Nav_State;
-
-void blankAKey(int key)
-{
-    rgb_matrix_set_color(key, 0, 0 ,0);
-}
-
-void blankAColumn(int Column)
-{
-    for(uint8_t i = 1; i < 6; i++)
-    {
-        blankAKey(i + (Column * 5));
-    }
-}
-
+Window_Nav_State_t Window_Nav_State = NAVCLOSED;
 
 // clang-format off
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
@@ -93,17 +65,17 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
         KC_DEL,     KC_Q,            KC_W,           KC_E,        KC_R,     KC_T,    XXXXXXX,                    XXXXXXX,  KC_Y,   KC_U,   KC_I,      KC_O,     KC_P,     KC_BSLS,
         KC_BSPC,    KC_A,            KC_S,           KC_D,        KC_F,     KC_G,    XXXXXXX,                    XXXXXXX,  KC_H,   KC_J,   KC_K,      KC_L,     KC_SCLN,  KC_QUOT,
         KC_LSFT,    LCTL_T(KC_Z),    KC_X,           KC_C,        KC_V,     KC_B,                                          KC_N,   KC_M,   KC_COMM,   KC_DOT,   KC_SLSH,  KC_RSFT,
-        XXXXXXX,    XXXXXXX,         XXXXXXX,        XXXXXXX,     WDNAV,             UNDO,                       KC_ESC,           ARRW,   XXXXXXX,   KC_LBRC,  KC_RBRC,  GAMELAYSWITCH,
+        XXXXXXX,    XXXXXXX,         XXXXXXX,        XXXXXXX,     MONAV,             UNDO,                       KC_ESC,           MO(NAV),QK_LEAD,   KC_LBRC,  KC_RBRC,  GAMELAYSWITCH,
 
                                                                   KC_SPC,   KC_BSPC, KC_LGUI,                    KC_LALT,  KC_TAB,  KC_ENT
     ),
 
     [NAV] = LAYOUT_moonlander(
         XXXXXXX,    KC_F1,           KC_F2,          KC_F3,       KC_F4,      KC_F5,   KC_F6,                     KC_F7,    KC_F8,   KC_F9,   KC_F10,  KC_F11,  KC_F12,  XXXXXXX,
-        XXXXXXX,    KC_TAB,          CUT,            COPY,        PASTE,      XXXXXXX, XXXXXXX,                   XXXXXXX,  XXXXXXX, XXXXXXX, KC_UP,   XXXXXXX, XXXXXXX, XXXXXXX,
-        XXXXXXX,    KC_LSFT,         XXXXXXX,        XXXXXXX,     XXXXXXX,    XXXXXXX, XXXXXXX,                   XXXXXXX,  XXXXXXX, KC_LEFT, KC_DOWN, KC_RGHT, BASELAY, XXXXXXX,
-        XXXXXXX,    KC_LCTL,         XXXXXXX,        KC_LEFT_ALT, XXXXXXX,    XXXXXXX,                                      XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX,
-        XXXXXXX,    XXXXXXX,         XXXXXXX,        XXXXXXX,     WDNAVSELECT,         XXXXXXX,                    _______,          BASELAY, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX,
+        XXXXXXX,    KC_TAB,          CUT,            COPY,        PASTE,      XXXXXXX, XXXXXXX,                   XXXXXXX,  XXXXXXX, XXXXXXX, KC_UP,   XXXXXXX, XXXXXXX, KC_AUDIO_VOL_UP,
+        XXXXXXX,    KC_LSFT,         XXXXXXX,        XXXXXXX,     XXXXXXX,    XXXXXXX, XXXXXXX,                   XXXXXXX,  XXXXXXX, KC_LEFT, KC_DOWN, KC_RGHT, BASELAY, KC_AUDIO_VOL_DOWN,
+        XXXXXXX,    KC_LCTL,         XXXXXXX,        KC_LEFT_ALT, XXXXXXX,    XXXXXXX,                                      XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX, KC_AUDIO_MUTE,
+        XXXXXXX,    XXXXXXX,         XXXXXXX,        XXXXXXX,     WDNAVSELECT,         XXXXXXX,                    _______,          _______, XXXXXXX, XXXXXXX, XXXXXXX, XXXXXXX,
                                                                      _______, _______, _______,                    _______, _______, _______
     ),
 
@@ -112,10 +84,9 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
         KC_ESC,   KC_1,    KC_2,    KC_3,    KC_4,    KC_5,   XXXXXXX,                XXXXXXX,   XXXXXXX,   XXXXXXX,   XXXXXXX,   XXXXXXX,   XXXXXXX,   XXXXXXX,
         KC_TAB,   KC_Q,    KC_W,    KC_E,    KC_R,    KC_T,   XXXXXXX,                XXXXXXX,   XXXXXXX,   XXXXXXX,   XXXXXXX,   XXXXXXX,   XXXXXXX,   XXXXXXX,
         XXXXXXX,  KC_A,    KC_S,    KC_D,    KC_F,    KC_G,   XXXXXXX,                XXXXXXX,   XXXXXXX,   XXXXXXX,   XXXXXXX,   XXXXXXX,   XXXXXXX,   XXXXXXX,
-        KC_LSFT,  KC_Z,    KC_X,    KC_C,    KC_V,    KC_B,                                   XXXXXXX,   XXXXXXX,   XXXXXXX,   XXXXXXX,   XXXXXXX,   XXXXXXX,
+        KC_LSFT,  KC_Z,    KC_X,    KC_C,    KC_V,    KC_B,                           XXXXXXX,   XXXXXXX,   XXXXXXX,   XXXXXXX,   XXXXXXX,   XXXXXXX,
         XXXXXXX,  XXXXXXX, XXXXXXX, KC_LCTL, KC_SPC,          XXXXXXX,                XXXXXXX,              _______,   XXXXXXX,   XXXXXXX,   XXXXXXX,   BASELAY,
-                                             XXXXXXX, XXXXXXX, _______
-                                             ,                XXXXXXX, XXXXXXX, WDNAVSELECT
+                                             XXXXXXX, XXXXXXX, _______,               XXXXXXX, XXXXXXX, WDNAVSELECT
     ),
 };
 
@@ -126,15 +97,14 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
         switch (keycode) {
 
         case WDNAV:
-            WindowsNav()
+            register_code(KC_LEFT_CTRL);
+            register_code(KC_LALT);
+            register_code(KC_TAB);
+            unregister_code(KC_LEFT_CTRL);
+            unregister_code(KC_LALT);
+            unregister_code(KC_TAB);
             layer_move(NAV);
             Window_Nav_State = NAVOPEN;
-           return false;
-        break;
-
-        case ARRW:
-            layer_move(NAV);
-
             return false;
         break;
 
@@ -170,34 +140,22 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
         break;
 
         case COPY:
-        register_code(KC_LEFT_CTRL);
-        register_code(KC_C);
-        unregister_code(KC_C);
-        unregister_code(KC_LEFT_CTRL);
+            COPYHOTKEY();
             return false;
         break;
 
         case PASTE:
-        register_code(KC_LEFT_CTRL);
-        register_code(KC_V);
-        unregister_code(KC_V);
-        unregister_code(KC_LEFT_CTRL);
+            PASTEHOTKEY();
             return false;
         break;
 
         case CUT:
-            register_code(KC_LCTL);
-            register_code(KC_X);
-            unregister_code(KC_LCTL);
-            unregister_code(KC_X);
+            CUTHOTKEY();
             return false;
         break;
 
         case UNDO:
-            register_code(KC_LCTL);
-            register_code(KC_Z);
-            unregister_code(KC_LCTL);
-            unregister_code(KC_Z);
+            UNDOHOTKEY();
             return false;
         break;
 
@@ -206,70 +164,234 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
             return false;
         break;
         }
-
     }
     return true;
 }
 
+void leader_start_user(void) {
+    // Do something when the leader key is pressed
+}
+
+void leader_end_user(void) {
+    SEQ_ONE_KEY(KC_F)
+    {
+        // Leader, f => Types the below string
+        SEND_STRING("QMK is awesome.");
+    }
+    else SEQ_TWO_KEYS(KC_D, KC_D)
+    {
+        // Leader, d, d => Ctrl+A, Ctrl+C
+        SEND_STRING(SS_LCTL("a") SS_LCTL("c"));
+    }
+    else SEQ_THREE_KEYS(KC_D, KC_D, KC_S)
+    {
+        // Leader, d, d, s => Types the below string
+        SEND_STRING("https://start.duckduckgo.com\n");
+    }
+    else SEQ_TWO_KEYS(KC_A, KC_S)
+    {
+        // Leader, a, s => GUI+S
+        tap_code16(LGUI(KC_S));
+    }
+}
+
+int keypace = 0;
+int timepace = 0;
+
 layer_state_t layer_state_set_user(layer_state_t state) {
     switch (get_highest_layer(state)) {
         case BASE:
-            autoshift_enable();
-            rgb_matrix_set_color(60, 0, 0 ,0);
+            autoshift_disable();
+            rgb_matrix_set_color(60, 255, 255, 255);
 
         break;
         case NAV:
-
-            rgb_matrix_set_color(60, 255, 0 ,0);
-
-            rgb_matrix_set_color(53, 0, 0, 255);
-            rgb_matrix_set_color(52, 0, 0, 255);
-            rgb_matrix_set_color(48, 0, 0, 255);
-            rgb_matrix_set_color(58, 0, 0, 255);
-
-            rgb_matrix_set_color(46, 0, 0, 0);
-            rgb_matrix_set_color(47, 0, 0, 0);
-            rgb_matrix_set_color(49, 0, 0, 0);
-            rgb_matrix_set_color(50, 0, 0, 0);
-
-            rgb_matrix_set_color(51, 0, 0, 0);
-            rgb_matrix_set_color(54, 0, 0, 0);
-            rgb_matrix_set_color(55, 0, 0, 0);
-            rgb_matrix_set_color(56, 0, 0, 0);
-            rgb_matrix_set_color(57, 0, 0, 0);
-            rgb_matrix_set_color(59, 0, 0, 0);
-
-            blankAColumn(8);
-            blankAColumn(7);
-            blankAColumn(12);
-            blankAColumn(13);
+        {
             autoshift_disable();
-
+            NavLayerRGB();
+        }
         break;
         case GAME:
-
-            //blankAColumn(7);
-            blankAColumn(8);
-            blankAColumn(9);
-            blankAColumn(10);
-            blankAColumn(11);
-            blankAColumn(12);
-            blankAColumn(13);
-
-            blankAKey(36);
-            blankAKey(37);
-            blankAKey(38);
-            blankAKey(39);
-            rgb_matrix_set_color(40, 255, 255, 255);
-
+        {
+            autoshift_disable();
+            SetGameLayerLights();
+        }
         break;
         default:
-
-
             autoshift_disable();
-
         break;
     }
     return state;
 }
 
+uint16_t get_tapping_term(uint16_t keycode, keyrecord_t *record)
+{
+    return 300;
+}
+
+
+void colorAKey(int ID, int r, int g, int b)
+{
+    rgb_matrix_set_color(ID, r, g, b);
+}
+
+void colorLeftKeyGrid(int Column, int Row, int r, int g, int b)
+{
+    int correction = 0;
+
+    if(((Column == 5) && (Row == 4)) || ((Column == 6) && (Row > 2)) || (Column > 6) || (Row > 5))
+    {
+        return;
+    }
+
+    if(Column > 5 && Column < 7)
+    {
+        correction -= 1;
+    }
+
+    Column *= 5;
+
+    int newLinearValue = (Column + Row + correction);
+
+    colorAKey(newLinearValue, r, g, b);
+}
+
+
+void colorRightKeyGrid(int Column, int Row, int r, int g, int b)
+{
+    int correction = 0;
+
+    if(((Column == 5) && (Row == 4)) || ((Column == 6) && (Row > 2)) || (Column > 6) || (Row > 5))
+    {
+        return;
+    }
+
+    if(Column > 5 && Column < 7)
+    {
+        correction -= 1;
+    }
+
+    Column *= 5;
+
+    int newLinearValue = (Column + Row + correction) + (NumberOfKeys / 2);
+
+    colorAKey(newLinearValue, r, g, b);
+}
+
+void NavLayerRGB(void)
+{
+
+    //rgb_matrix_set_color(11, 255, 255, 255);
+    //rgb_matrix_set_color(10, 255, 255, 255);
+
+    colorLeftKeyGrid(0 ,_1stRow,RED)   ;
+    colorLeftKeyGrid(1 ,_1stRow,PURPLE);
+    colorLeftKeyGrid(2 ,_1stRow,PURPLE);
+    colorLeftKeyGrid(3 ,_1stRow,PURPLE);
+    colorLeftKeyGrid(4 ,_1stRow,PURPLE);
+    colorLeftKeyGrid(5 ,_1stRow,PURPLE);
+    colorLeftKeyGrid(6 ,_1stRow,PURPLE);
+
+    colorLeftKeyGrid(0 ,_2ndRow,BLANK)  ;
+    colorLeftKeyGrid(1 ,_2ndRow,GREEN)  ;
+    colorLeftKeyGrid(2 ,_2ndRow,BLUE)  ;
+    colorLeftKeyGrid(3 ,_2ndRow,BLUE) ;
+    colorLeftKeyGrid(4 ,_2ndRow,BLUE) ;
+    colorLeftKeyGrid(5 ,_2ndRow,BLANK) ;
+    colorLeftKeyGrid(6 ,_2ndRow,BLANK) ;
+
+    colorLeftKeyGrid(0 ,_3rdRow,BLANK) ;
+    colorLeftKeyGrid(1 ,_3rdRow,WHITE) ;
+    colorLeftKeyGrid(2 ,_3rdRow,BLANK) ;
+    colorLeftKeyGrid(3 ,_3rdRow,BLANK) ;
+    colorLeftKeyGrid(4 ,_3rdRow,BLANK) ;
+    colorLeftKeyGrid(5 ,_3rdRow,BLANK) ;
+    colorLeftKeyGrid(6 ,_3rdRow,BLANK) ;
+
+    colorLeftKeyGrid(0 ,_4thRow,BLANK) ;
+    colorLeftKeyGrid(1 ,_4thRow,WHITE) ;
+    colorLeftKeyGrid(2 ,_4thRow,BLANK) ;
+    colorLeftKeyGrid(3 ,_4thRow,WHITE) ;
+    colorLeftKeyGrid(4 ,_4thRow,BLANK) ;
+    colorLeftKeyGrid(5 ,_4thRow,BLANK) ;
+
+    colorLeftKeyGrid(0 ,_5thRow,BLANK) ;
+    colorLeftKeyGrid(1 ,_5thRow,BLANK) ;
+    colorLeftKeyGrid(2 ,_5thRow,BLANK) ;
+    colorLeftKeyGrid(3 ,_5thRow,BLANK) ;
+    colorLeftKeyGrid(4 ,_5thRow,RED)   ;
+
+    colorRightKeyGrid(0,_1stRow,RED)   ;
+    colorRightKeyGrid(1,_1stRow,PURPLE);
+    colorRightKeyGrid(2,_1stRow,PURPLE);
+    colorRightKeyGrid(3,_1stRow,PURPLE);
+    colorRightKeyGrid(4,_1stRow,PURPLE);
+    colorRightKeyGrid(5,_1stRow,PURPLE);
+    colorRightKeyGrid(6,_1stRow,PURPLE);
+
+    colorRightKeyGrid(0,_2ndRow,GREEN) ;
+    colorRightKeyGrid(1,_2ndRow,BLANK) ;
+    colorRightKeyGrid(2,_2ndRow,BLANK) ;
+    colorRightKeyGrid(3,_2ndRow,BLUE)  ;
+    colorRightKeyGrid(4,_2ndRow,BLANK) ;
+    colorRightKeyGrid(5,_2ndRow,BLANK) ;
+    colorRightKeyGrid(6,_2ndRow,BLANK) ;
+
+    colorRightKeyGrid(0,_3rdRow, 255/2,255,255/2) ;
+    colorRightKeyGrid(1,_3rdRow,BLANK) ;
+    colorRightKeyGrid(2,_3rdRow,BLUE)  ;
+    colorRightKeyGrid(3,_3rdRow,BLUE)  ;
+    colorRightKeyGrid(4,_3rdRow,BLUE)  ;
+    colorRightKeyGrid(5,_3rdRow,BLANK) ;
+    colorRightKeyGrid(6,_3rdRow,BLANK) ;
+
+    colorRightKeyGrid(0,_4thRow,BLANK) ;
+    colorRightKeyGrid(1,_4thRow,BLANK) ;
+    colorRightKeyGrid(2,_4thRow,BLANK) ;
+    colorRightKeyGrid(3,_4thRow,BLANK) ;
+    colorRightKeyGrid(4,_4thRow,BLANK) ;
+    colorRightKeyGrid(5,_4thRow,BLANK) ;
+
+    colorRightKeyGrid(0,_5thRow,BLANK) ;
+    colorRightKeyGrid(1,_5thRow,BLANK) ;
+    colorRightKeyGrid(2,_5thRow,BLANK) ;
+    colorRightKeyGrid(3,_5thRow,BLANK) ;
+    colorRightKeyGrid(4,_5thRow,BLANK) ;
+}
+
+
+void SetGameLayerLights(void)
+{
+    colorRightKeyGrid(0, _1stRow, BLANK);
+    colorRightKeyGrid(1, _1stRow, PURPLE);
+    colorRightKeyGrid(2, _1stRow, PURPLE);
+    colorRightKeyGrid(3, _1stRow, PURPLE);
+    colorRightKeyGrid(4, _1stRow, PURPLE);
+    colorRightKeyGrid(5, _1stRow, PURPLE);
+    colorRightKeyGrid(6, _1stRow, PURPLE);
+    colorRightKeyGrid(0, _2ndRow, BLANK);
+    colorRightKeyGrid(1, _2ndRow, BLANK);
+    colorRightKeyGrid(2, _2ndRow, BLANK);
+    colorRightKeyGrid(3, _2ndRow, BLANK);
+    colorRightKeyGrid(4, _2ndRow, BLANK);
+    colorRightKeyGrid(5, _2ndRow, BLANK);
+    colorRightKeyGrid(6, _2ndRow, BLANK);
+    colorRightKeyGrid(0, _3rdRow, BLANK);
+    colorRightKeyGrid(1, _3rdRow, BLANK);
+    colorRightKeyGrid(2, _3rdRow, BLANK);
+    colorRightKeyGrid(3, _3rdRow, BLANK);
+    colorRightKeyGrid(4, _3rdRow, BLANK);
+    colorRightKeyGrid(5, _3rdRow, BLANK);
+    colorRightKeyGrid(6, _3rdRow, BLANK);
+    colorRightKeyGrid(0, _4thRow, BLANK);
+    colorRightKeyGrid(1, _4thRow, BLANK);
+    colorRightKeyGrid(2, _4thRow, BLANK);
+    colorRightKeyGrid(3, _4thRow, BLANK);
+    colorRightKeyGrid(4, _4thRow, BLANK);
+    colorRightKeyGrid(5, _4thRow, BLANK);
+    colorRightKeyGrid(0, _5thRow, RED);
+    colorRightKeyGrid(1, _5thRow, BLANK);
+    colorRightKeyGrid(2, _5thRow, BLANK);
+    colorRightKeyGrid(3, _5thRow, BLANK);
+    colorRightKeyGrid(4, _5thRow, BLANK);
+}

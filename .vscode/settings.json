@@ -27,5 +27,8 @@
     "python.formatting.provider": "yapf",
     "[json]": {
 	    "editor.formatOnSave": false
-    }
+    },
+    "workbench.colorCustomizations": {
+        "editor.foldBackground": "#00000000"
+      }
 }
