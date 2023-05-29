@@ -19,7 +19,9 @@
 #define NumberOfThumbClusterKeysOnOneSide (4)
 
 void NavLayerRGB(void);
+void WinNavLayerRGB( void );
 void SetGameLayerLights(void);
 void colorAKey(int ID, int r, int g, int b);
-void colorRightKeyGrid(int Column, int Row, int r, int g, int b);
 
+void colorRightKeyGrid(int Column, int Row, int r, int g, int b);
+void colorLeftKeyGrid(int Column, int Row, int r, int g, int b);

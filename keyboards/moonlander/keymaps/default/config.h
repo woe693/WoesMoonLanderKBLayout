@@ -1,5 +1,6 @@
-/* Copyright 2020 ZSA Technology Labs, Inc <@zsa>
- * Copyright 2020 Jack Humbert <jack.humb@gmail.com>
+
+
+/*
  * Copyright 2020 Christopher Courtney, aka Drashna Jael're  (@drashna) <drashna@live.com>
  *
  * This program is free software: you can redistribute it and/or modify
@@ -29,12 +30,16 @@
 #define LEADER_PER_KEY_TIMING
 #define ORYX_CONFIGURATOR
 
-
-
 #define numbrrow        KC_ESC, KC_1,   KC_2,   KC_3,   KC_4,   KC_5,
 #define qwert           KC_Q,   KC_W,   KC_E,   KC_R,   KC_T,
 #define shasdfg         KC_A,   KC_S,   KC_D,   KC_F,   KC_G,
 
-
+enum layers
+{
+    BASE,  // default layer
+    NAV,
+    WINNAV,
+    GAME,
+};
 
 
