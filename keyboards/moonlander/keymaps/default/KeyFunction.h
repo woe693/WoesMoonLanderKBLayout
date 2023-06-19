@@ -16,6 +16,7 @@ enum custom_keycodes
     CUT,
     UNDO,
     GAMELAYSWITCH,
+    STMOVLY
 };
 
 
