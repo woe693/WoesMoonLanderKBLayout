@@ -30,7 +30,6 @@ void colorLeftKeyGrid(int Column, int Row, int r, int g, int b)
     colorAKey(newLinearValue, r, g, b);
 }
 
-
 void colorRightKeyGrid(int Column, int Row, int r, int g, int b)
 {
     int correction = 0;

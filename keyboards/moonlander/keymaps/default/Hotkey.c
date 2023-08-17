@@ -3,22 +3,22 @@
 
 void undo( void )
 {
-SEND_STRING(SS_LCTL("z"));
+    SEND_STRING(SS_LCTL("z"));
 }
 
 void cut( void )
 {
-SEND_STRING(SS_LCTL("x"));
+    SEND_STRING(SS_LCTL("x"));
 }
 
 void copy( void )
 {
-SEND_STRING(SS_LCTL("c"));
+    SEND_STRING(SS_LCTL("c"));
 }
 
 void paste( void )
 {
-SEND_STRING(SS_LCTL("v"));
+    SEND_STRING(SS_LCTL("v"));
 }
 
 void WindowNav( void )

@@ -1,5 +1,3 @@
-
-
 /*
  * Copyright 2020 Christopher Courtney, aka Drashna Jael're  (@drashna) <drashna@live.com>
  *

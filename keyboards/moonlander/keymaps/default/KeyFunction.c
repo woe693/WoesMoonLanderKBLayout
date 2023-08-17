@@ -7,7 +7,7 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record)
     if (record->event.pressed) {
         switch (keycode)
         {
-            case MO(WINNAV):
+            case MO(WINNAV): // this swaps to a semi nav layer and open up the window's navigation screen. The other nav key does not need to be overwritten because it uses the built in MO macro
                 WindowNav();
                 return true;
             break;

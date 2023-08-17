@@ -22,7 +22,7 @@ SWAP_HANDS_ENABLE = yes
 RGB_MATRIX_ENABLE = yes
 RGB_MATRIX_DRIVER = IS31FL3731
 EEPROM_DRIVER = i2c
-AUTO_SHIFT_ENABLE = yes
+#AUTO_SHIFT_ENABLE = yes
 LEADER_ENABLE = yes
 
 #project specific files
@@ -30,3 +30,4 @@ SRC += matrix.c KeyFunction.c Hotkey.c RGB.c Layer.c
 QUANTUM_LIB_SRC += i2c_master.c
 
 MOUSE_SHARED_EP = no
+
